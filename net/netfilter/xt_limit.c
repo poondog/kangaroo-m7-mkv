@@ -64,10 +64,10 @@ limit_mt(const struct sk_buff *skb, struct xt_action_param *par)
 	return false;
 }
 
-static u_int32_t
-user2credits(u_int32_t user)
+/* Precision saver. */
+static u32 user2credits(u32 user)
 {
-	
+	/* If multiplying would overflow... */
 	if (user > 0xFFFFFFFF / (HZ*CREDITS_PER_JIFFY))
 		
 		return (user / XT_LIMIT_SCALE) * HZ * CREDITS_PER_JIFFY;
@@ -97,7 +97,7 @@ static int limit_mt_check(const struct xt_mtchk_param *par)
 	if (r->cost == 0) {
 		priv->prev = jiffies;
 		priv->credit = user2credits(r->avg * r->burst); 
-		r->credit_cap = user2credits(r->avg * r->burst); 
+		r->credit_cap = priv->credit; /* Credits full. */
 		r->cost = user2credits(r->avg);
 	}
 	return 0;
