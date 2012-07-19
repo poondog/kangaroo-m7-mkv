@@ -15,7 +15,23 @@
 #include <linux/usb/quirks.h>
 #include "usb.h"
 
-static const struct usb_device_id usb_quirk_list[] = {
+/* Lists of quirky USB devices, split in device quirks and interface quirks.
+ * Device quirks are applied at the very beginning of the enumeration process,
+ * right after reading the device descriptor. They can thus only match on device
+ * information.
+ *
+ * Interface quirks are applied after reading all the configuration descriptors.
+ * They can match on both device and interface information.
+ *
+ * Note that the DELAY_INIT and HONOR_BNUMINTERFACES quirks do not make sense as
+ * interface quirks, as they only influence the enumeration process which is run
+ * before processing the interface quirks.
+ *
+ * Please keep the lists ordered by:
+ * 	1) Vendor ID
+ * 	2) Product ID
+ * 	3) Class ID
+ */static const struct usb_device_id usb_quirk_list[] = {
 	
 	{ USB_DEVICE(0x0204, 0x6025), .driver_info = USB_QUIRK_RESET_RESUME },
 
@@ -169,28 +185,61 @@ static const struct usb_device_id usb_quirk_list[] = {
 	{ }  
 };
 
-static const struct usb_device_id *find_id(struct usb_device *udev)
-{
-	const struct usb_device_id *id = usb_quirk_list;
+static const struct usb_device_id usb_interface_quirk_list[] = {
+	{ }  /* terminating entry must be last */
+};
 
-	for (; id->idVendor || id->bDeviceClass || id->bInterfaceClass ||
-			id->driver_info; id++) {
-		if (usb_match_device(udev, id))
-			return id;
+static bool usb_match_any_interface(struct usb_device *udev,
+				    const struct usb_device_id *id)
+{
+	unsigned int i;
+
+	for (i = 0; i < udev->descriptor.bNumConfigurations; ++i) {
+		struct usb_host_config *cfg = &udev->config[i];
+		unsigned int j;
+
+		for (j = 0; j < cfg->desc.bNumInterfaces; ++j) {
+			struct usb_interface_cache *cache;
+			struct usb_host_interface *intf;
+
+			cache = cfg->intf_cache[j];
+			if (cache->num_altsetting == 0)
+				continue;
+
+			intf = &cache->altsetting[0];
+			if (usb_match_one_id_intf(udev, intf, id))
+				return true;
+		}
 	}
-	return NULL;
+
+	return false;
+}
+
+static u32 __usb_detect_quirks(struct usb_device *udev,
+			       const struct usb_device_id *id)
+{
+	u32 quirks = 0;
+
+	for (; id->match_flags; id++) {
+		if (!usb_match_device(udev, id))
+			continue;
+
+		if ((id->match_flags & USB_DEVICE_ID_MATCH_INT_INFO) &&
+		    !usb_match_any_interface(udev, id))
+			continue;
+
+		quirks |= (u32)(id->driver_info);
+	}
+
+	return quirks;
 }
 
 void usb_detect_quirks(struct usb_device *udev)
 {
-	const struct usb_device_id *id = usb_quirk_list;
-
-	id = find_id(udev);
-	if (id)
-		udev->quirks = (u32)(id->driver_info);
+	udev->quirks = __usb_detect_quirks(udev, usb_quirk_list);
 	if (udev->quirks)
 		dev_dbg(&udev->dev, "USB quirks for this device: %x\n",
-				udev->quirks);
+			udev->quirks);
 
 	
 #if 0		
@@ -202,4 +251,17 @@ void usb_detect_quirks(struct usb_device *udev)
 	if (!(udev->quirks & USB_QUIRK_RESET_MORPHS))
 		udev->persist_enabled = 1;
 #endif	
+}
+
+void usb_detect_interface_quirks(struct usb_device *udev)
+{
+	u32 quirks;
+
+	quirks = __usb_detect_quirks(udev, usb_interface_quirk_list);
+	if (quirks == 0)
+		return;
+
+	dev_dbg(&udev->dev, "USB interface quirks for this device: %x\n",
+		quirks);
+	udev->quirks |= quirks;
 }
