@@ -791,7 +791,12 @@ char *pointer(const char *fmt, char *buf, char *end, void *ptr,
 			return buf;
 		}
 	case 'K':
-		if (in_irq() || in_serving_softirq() || in_nmi()) {
+		/*
+		 * %pK cannot be used in IRQ context because its test
+ 		 * for CAP_SYSLOG would be meaningless.
+ 		 */
+		if (kptr_restrict && (in_irq() || in_serving_softirq() ||
+				      in_nmi())) {
 			if (spec.field_width == -1)
 				spec.field_width = 2 * sizeof(void *);
 			return string(buf, end, "pK-error", spec);
