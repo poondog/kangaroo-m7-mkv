@@ -783,7 +783,8 @@ static int rpm_resume(struct device *dev, int rpmflags)
 			if ( log_enable == 1 )
 				dev_info(dev, "%s[%d] spin_unlock\n", __func__, __LINE__);
 			spin_unlock(&dev->parent->power.lock);
-			goto no_callback;	
+			retval = 1;
+			goto no_callback;	/* Assume success. */	
 		}
 		if ( log_enable == 1 )
 			dev_info(dev, "%s[%d] spin_unlock\n", __func__, __LINE__);
@@ -953,7 +954,7 @@ static int rpm_resume(struct device *dev, int rpmflags)
 	wake_up_all(&dev->power.wait_queue);
 	if ( log_enable == 1 )
 		dev_info(dev, "%s[%d] wake_up_all-\n", __func__, __LINE__);
-	if (!retval) {
+	if (retval >= 0) {
 		if ( log_enable == 1 )
 			dev_info(dev, "%s[%d] rpm_idle+\n", __func__, __LINE__);
 		rpm_idle(dev, RPM_ASYNC);
