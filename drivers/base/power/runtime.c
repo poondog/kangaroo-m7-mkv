@@ -410,7 +410,6 @@ static int rpm_suspend(struct device *dev, int rpmflags)
 		goto repeat;
 	}
 
-	dev->power.deferred_resume = false;
 	if (dev->power.no_callbacks)
 		goto no_callback;	
 
@@ -536,25 +535,18 @@ static int rpm_suspend(struct device *dev, int rpmflags)
 
 	if (dev->power.deferred_resume) {
 
-		
-		
 		#if defined(CONFIG_USB_EHCI_MSM_HSIC)
 		if (dev && dev->power.htc_hsic_dbg_enable)
 			dev_info(dev, "%s[%d] rpm_resume+ deferred_resume:%d\n", __func__, __LINE__, dev->power.deferred_resume);
-		#endif	
-		
-		
+		#endif
 
+		dev->power.deferred_resume = false;
 		rpm_resume(dev, 0);
-
-		
 		
 		#if defined(CONFIG_USB_EHCI_MSM_HSIC)
 		if (dev && dev->power.htc_hsic_dbg_enable)
 			dev_info(dev, "%s[%d] rpm_resume- deferred_resume:%d\n", __func__, __LINE__, dev->power.deferred_resume);
 		#endif	
-		
-		
 
 		retval = -EAGAIN;
 		goto out;
