@@ -437,10 +437,11 @@ static void copy_from_user_state(struct xfrm_state *x, struct xfrm_usersa_info *
 		x->sel.family = p->family;
 }
 
-static void xfrm_update_ae_params(struct xfrm_state *x, struct nlattr **attrs)
+static void xfrm_update_ae_params(struct xfrm_state *x, struct nlattr **attrs,
+				  int update_esn)
 {
 	struct nlattr *rp = attrs[XFRMA_REPLAY_VAL];
-	struct nlattr *re = attrs[XFRMA_REPLAY_ESN_VAL];
+	struct nlattr *re = update_esn ? attrs[XFRMA_REPLAY_ESN_VAL] : NULL;
 	struct nlattr *lt = attrs[XFRMA_LTIME_VAL];
 	struct nlattr *et = attrs[XFRMA_ETIMER_THRESH];
 	struct nlattr *rt = attrs[XFRMA_REPLAY_THRESH];
@@ -549,8 +550,8 @@ static struct xfrm_state *xfrm_state_construct(struct net *net,
 	if ((err = xfrm_init_replay(x)))
 		goto error;
 
-	
-	xfrm_update_ae_params(x, attrs);
+	/* override default values from above */
+	xfrm_update_ae_params(x, attrs, 0);
 
 	return x;
 
@@ -1779,7 +1780,7 @@ static int xfrm_new_ae(struct sk_buff *skb, struct nlmsghdr *nlh,
 		goto out;
 
 	spin_lock_bh(&x->lock);
-	xfrm_update_ae_params(x, attrs);
+	xfrm_update_ae_params(x, attrs, 1);
 	spin_unlock_bh(&x->lock);
 
 	c.event = nlh->nlmsg_type;
