@@ -1423,9 +1423,8 @@ static void cgroup_task_migrate(struct cgroup *cgrp, struct cgroup *oldcgrp,
 		list_move(&tsk->cg_list, &newcg->tasks);
 	write_unlock(&css_set_lock);
 
-	put_css_set(oldcg);
-
 	set_bit(CGRP_RELEASABLE, &oldcgrp->flags);
+	put_css_set(oldcg);
 }
 
 int cgroup_attach_task(struct cgroup *cgrp, struct task_struct *tsk)
