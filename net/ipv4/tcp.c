@@ -432,7 +432,7 @@ int tcp_ioctl(struct sock *sk, int cmd, unsigned long arg)
 
 			answ = tp->rcv_nxt - tp->copied_seq;
 
-			
+			/* Subtract 1, if FIN was received */
 			if (answ && sock_flag(sk, SOCK_DONE))
 				answ--;
 		} else
