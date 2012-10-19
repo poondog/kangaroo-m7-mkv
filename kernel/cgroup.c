@@ -3570,9 +3570,10 @@ void cgroup_post_fork(struct task_struct *child)
 	 */
 	if (use_task_css_set_links) {
 		write_lock(&css_set_lock);
-		if (list_empty(&child->cg_list)) {
+		task_lock(child);
+		if (list_empty(&child->cg_list))
 			list_add(&child->cg_list, &child->cgroups->tasks);
-		}
+		task_unlock(child);
 		write_unlock(&css_set_lock);
 	}
 }
