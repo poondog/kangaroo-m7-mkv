@@ -3538,8 +3538,10 @@ static const struct file_operations proc_cgroupstats_operations = {
 
 void cgroup_fork(struct task_struct *child)
 {
+	task_lock(current);
 	child->cgroups = current->cgroups;
 	get_css_set(child->cgroups);
+	task_unlock(current);
 	INIT_LIST_HEAD(&child->cg_list);
 }
 
