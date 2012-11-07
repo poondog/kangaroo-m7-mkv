@@ -374,8 +374,10 @@ static int snd_rawmidi_open(struct inode *inode, struct file *file)
 	if (rmidi == NULL)
 		return -ENODEV;
 
-	if (!try_module_get(rmidi->card->module))
+	if (!try_module_get(rmidi->card->module)) {
+		snd_card_unref(rmidi->card);
 		return -ENXIO;
+	}
 
 	mutex_lock(&rmidi->open_mutex);
 	card = rmidi->card;
@@ -435,6 +437,7 @@ static int snd_rawmidi_open(struct inode *inode, struct file *file)
 #endif
 	file->private_data = rawmidi_file;
 	mutex_unlock(&rmidi->open_mutex);
+	snd_card_unref(rmidi->card);
 	return 0;
 
  __error:
@@ -442,6 +445,7 @@ static int snd_rawmidi_open(struct inode *inode, struct file *file)
  __error_card:
 	mutex_unlock(&rmidi->open_mutex);
 	module_put(rmidi->card->module);
+	snd_card_unref(rmidi->card);
 	return err;
 }
 
