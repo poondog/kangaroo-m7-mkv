@@ -1909,6 +1909,10 @@ static int hub_port_wait_reset(struct usb_hub *hub, int port1,
 		if (ret < 0)
 			return ret;
 
+		/* The port state is unknown until the reset completes. */
+		if ((portstatus & USB_PORT_STAT_RESET))
+			goto delay;
+
 		pr_info("%s: portstatus = 0x%08x portchange = 0x%08x\n",__func__,portstatus,portchange); 
 		if (!warm) {
 			if (hub_port_warm_reset_required(hub, portstatus)) {
@@ -1941,8 +1945,7 @@ static int hub_port_wait_reset(struct usb_hub *hub, int port1,
 			if ((portchange & USB_PORT_STAT_C_CONNECTION))
 				return -EAGAIN;
 
-			if (!(portstatus & USB_PORT_STAT_RESET) &&
-			    (portstatus & USB_PORT_STAT_ENABLE)) {
+			if ((portstatus & USB_PORT_STAT_ENABLE)) {
 				if (hub_is_wusb(hub))
 					udev->speed = USB_SPEED_WIRELESS;
 				else if (hub_is_superspeed(hub->hdev))
@@ -1956,8 +1959,7 @@ static int hub_port_wait_reset(struct usb_hub *hub, int port1,
 				return 0;
 			}
 		} else {
-			if (portchange & USB_PORT_STAT_C_BH_RESET)
-				return 0;
+			return 0;
 		}
 
 		
