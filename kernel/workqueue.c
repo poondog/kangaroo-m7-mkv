@@ -42,6 +42,7 @@
 #include <linux/debug_locks.h>
 #include <linux/lockdep.h>
 #include <linux/idr.h>
+#include <linux/hashtable.h>
 
 #include "workqueue_sched.h"
 
@@ -132,8 +133,6 @@ enum {
 	TRUSTEE_DONE		= 4,		
 
 	BUSY_WORKER_HASH_ORDER	= 6,		
-	BUSY_WORKER_HASH_SIZE	= 1 << BUSY_WORKER_HASH_ORDER,
-	BUSY_WORKER_HASH_MASK	= BUSY_WORKER_HASH_SIZE - 1,
 
 	MAX_IDLE_WORKERS_RATIO	= 4,		
 	IDLE_WORKER_TIMEOUT	= 300 * HZ,	
@@ -181,8 +180,8 @@ struct global_cwq {
 
 	
 	struct list_head	idle_list;	
-	struct hlist_head	busy_hash[BUSY_WORKER_HASH_SIZE];
-						
+	DECLARE_HASHTABLE(busy_hash, BUSY_WORKER_HASH_ORDER);
+						/* L: hash of busy workers */
 
 	struct timer_list	idle_timer;	
 	struct timer_list	mayday_timer;	
@@ -275,8 +274,7 @@ EXPORT_SYMBOL_GPL(system_nrt_freezable_wq);
 #include <trace/events/workqueue.h>
 
 #define for_each_busy_worker(worker, i, pos, gcwq)			\
-	for (i = 0; i < BUSY_WORKER_HASH_SIZE; i++)			\
-		hlist_for_each_entry(worker, pos, &gcwq->busy_hash[i], hentry)
+	hash_for_each(gcwq->busy_hash, i, pos, worker, hentry)
 
 static inline int __next_gcwq_cpu(int cpu, const struct cpumask *mask,
 				  unsigned int sw)
@@ -647,39 +645,17 @@ static inline void worker_clr_flags(struct worker *worker, unsigned int flags)
 			atomic_inc(get_gcwq_nr_running(gcwq->cpu));
 }
 
-static struct hlist_head *busy_worker_head(struct global_cwq *gcwq,
-					   struct work_struct *work)
-{
-	const int base_shift = ilog2(sizeof(struct work_struct));
-	unsigned long v = (unsigned long)work;
-
-	
-	v >>= base_shift;
-	v += v >> BUSY_WORKER_HASH_ORDER;
-	v &= BUSY_WORKER_HASH_MASK;
-
-	return &gcwq->busy_hash[v];
-}
-
-static struct worker *__find_worker_executing_work(struct global_cwq *gcwq,
-						   struct hlist_head *bwh,
-						   struct work_struct *work)
+static struct worker *find_worker_executing_work(struct global_cwq *gcwq,
+						 struct work_struct *work)
 {
 	struct worker *worker;
 	struct hlist_node *tmp;
 
-	hlist_for_each_entry(worker, tmp, bwh, hentry)
-		if (worker->current_work == work &&
-		    worker->current_func == work->func)
+	hash_for_each_possible(gcwq->busy_hash, worker, tmp, hentry, (unsigned long)work)
+		if (worker->current_work == work)
 			return worker;
-	return NULL;
-}
 
-static struct worker *find_worker_executing_work(struct global_cwq *gcwq,
-						 struct work_struct *work)
-{
-	return __find_worker_executing_work(gcwq, busy_worker_head(gcwq, work),
-					    work);
+	return NULL;
 }
 
 static inline struct list_head *gcwq_determine_ins_pos(struct global_cwq *gcwq,
@@ -1300,14 +1276,13 @@ __acquires(&gcwq->lock)
 {
 	struct cpu_workqueue_struct *cwq = get_work_cwq(work);
 	struct global_cwq *gcwq = cwq->gcwq;
-	struct hlist_head *bwh = busy_worker_head(gcwq, work);
 	bool cpu_intensive = cwq->wq->flags & WQ_CPU_INTENSIVE;
 	int work_color;
 	struct worker *collision;
 #ifdef CONFIG_LOCKDEP
 	struct lockdep_map lockdep_map = work->lockdep_map;
 #endif
-	collision = __find_worker_executing_work(gcwq, bwh, work);
+	collision = find_worker_executing_work(gcwq, work);
 	if (unlikely(collision)) {
 		move_linked_works(work, &collision->scheduled, NULL);
 		return;
@@ -1315,7 +1290,7 @@ __acquires(&gcwq->lock)
 
 	
 	debug_work_deactivate(work);
-	hlist_add_head(&worker->hentry, bwh);
+	hash_add(gcwq->busy_hash, &worker->hentry, (unsigned long)work);
 	worker->current_work = work;
 	worker->current_func = work->func;
 	worker->current_cwq = cwq;
@@ -1381,8 +1356,8 @@ __acquires(&gcwq->lock)
 	if (unlikely(cpu_intensive))
 		worker_clr_flags(worker, WORKER_CPU_INTENSIVE);
 
-	
-	hlist_del_init(&worker->hentry);
+	/* we're done with it, release */
+	hash_del(&worker->hentry);
 	worker->current_work = NULL;
 	worker->current_func = NULL;
 	worker->previous_work = work;
@@ -2677,7 +2652,6 @@ EXPORT_SYMBOL(show_pending_work_on_gcwq);
 static int __init init_workqueues(void)
 {
 	unsigned int cpu;
-	int i;
 
 	cpu_notifier(workqueue_cpu_up_callback, CPU_PRI_WORKQUEUE_UP);
 	cpu_notifier(workqueue_cpu_down_callback, CPU_PRI_WORKQUEUE_DOWN);
@@ -2692,8 +2666,8 @@ static int __init init_workqueues(void)
 		gcwq->flags |= GCWQ_DISASSOCIATED;
 
 		INIT_LIST_HEAD(&gcwq->idle_list);
-		for (i = 0; i < BUSY_WORKER_HASH_SIZE; i++)
-			INIT_HLIST_HEAD(&gcwq->busy_hash[i]);
+
+		hash_init(gcwq->busy_hash);
 
 		init_timer_deferrable(&gcwq->idle_timer);
 		gcwq->idle_timer.function = idle_worker_timeout;
