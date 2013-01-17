@@ -44,7 +44,8 @@
 #define PORT_U6_16550A	19	
 #define PORT_TEGRA	20	
 #define PORT_XR17D15X	21	
-#define PORT_MAX_8250	21	
+#define PORT_BRCM_TRUMANAGE	25
+#define PORT_MAX_8250	25	/* max port ID */
 
 #define PORT_PXA	31
 #define PORT_AMBA	32
