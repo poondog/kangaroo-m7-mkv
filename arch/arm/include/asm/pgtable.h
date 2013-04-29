@@ -47,6 +47,15 @@ extern void __pgd_error(const char *file, int line, pgd_t);
 
 #define FIRST_USER_ADDRESS	PAGE_SIZE
 
+/*
+ * Use TASK_SIZE as the ceiling argument for free_pgtables() and
+ * free_pgd_range() to avoid freeing the modules pmd when LPAE is enabled (pmd
+ * page shared between user and kernel).
+ */
+#ifdef CONFIG_ARM_LPAE
+#define USER_PGTABLES_CEILING	TASK_SIZE
+#endif
+
 #define _L_PTE_DEFAULT	L_PTE_PRESENT | L_PTE_YOUNG
 
 extern pgprot_t		pgprot_user;
