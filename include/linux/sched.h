@@ -2010,14 +2010,12 @@ static inline void threadgroup_change_end(struct task_struct *tsk)
 
 static inline void threadgroup_lock(struct task_struct *tsk)
 {
-	mutex_lock(&tsk->signal->cred_guard_mutex);
 	down_write(&tsk->signal->group_rwsem);
 }
 
 static inline void threadgroup_unlock(struct task_struct *tsk)
 {
 	up_write(&tsk->signal->group_rwsem);
-	mutex_unlock(&tsk->signal->cred_guard_mutex);
 }
 #else
 static inline void threadgroup_change_begin(struct task_struct *tsk) {}
