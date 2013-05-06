@@ -823,7 +823,10 @@ void do_exit(long code)
 	if (unlikely(current->pi_state_cache))
 		kfree(current->pi_state_cache);
 #endif
-	debug_check_no_locks_held(tsk);
+	/*
+	 * Make sure we are holding no locks:
+	 */
+	debug_check_no_locks_held();
 	tsk->flags |= PF_EXITPIDONE;
 
 	if (tsk->io_context)
