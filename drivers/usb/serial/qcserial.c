@@ -115,7 +115,8 @@ static const struct usb_device_id id_table[] = {
 	{USB_DEVICE(0x413c, 0x8194)},	
 	{USB_DEVICE(0x1199, 0x9013)},	
 	{USB_DEVICE(0x12D1, 0x14F0)},	
-	{USB_DEVICE(0x12D1, 0x14F1)},	
+	{USB_DEVICE(0x12D1, 0x14F1)},
+	{USB_DEVICE(0x0AF0, 0x8120)},	/* Option GTM681W */	
 	{USB_DEVICE(0x05c6, 0x9048)},	
 	{USB_DEVICE(0x05c6, 0x908a)},   
 	{USB_DEVICE(0x05c6, 0x904C)},	
