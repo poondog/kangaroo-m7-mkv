@@ -976,10 +976,8 @@ void setup_new_exec(struct linux_binprm * bprm)
 			set_dumpable(current->mm, suid_dumpable);
 	}
 
-	if (!get_dumpable(current->mm))
-		perf_event_exit_task(current);
-
-
+	/* An exec changes our domain. We are no longer part of the thread
+	   group */
 	current->self_exec_id++;
 			
 	flush_signal_handlers(current, 0);
@@ -1031,6 +1029,16 @@ void install_exec_creds(struct linux_binprm *bprm)
 
 	commit_creds(bprm->cred);
 	bprm->cred = NULL;
+
+	/*
+	 * Disable monitoring for regular users
+	 * when executing setuid binaries. Must
+	 * wait until new credentials are committed
+	 * by commit_creds() above
+	 */
+	if (get_dumpable(current->mm) != SUID_DUMP_USER)
+		perf_event_exit_task(current);
+
 	security_bprm_committed_creds(bprm);
 	mutex_unlock(&current->signal->cred_guard_mutex);
 }
