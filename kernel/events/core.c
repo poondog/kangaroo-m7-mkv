@@ -5870,7 +5870,7 @@ inherit_task_group(struct perf_event *event, struct task_struct *parent,
 	child_ctx = child->perf_event_ctxp[ctxn];
 	if (!child_ctx) {
 
-		child_ctx = alloc_perf_context(event->pmu, child);
+		child_ctx = alloc_perf_context(parent_ctx->pmu, child);
 		if (!child_ctx)
 			return -ENOMEM;
 
