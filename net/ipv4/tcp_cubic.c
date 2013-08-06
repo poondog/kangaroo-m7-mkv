@@ -338,8 +338,8 @@ static void bictcp_acked(struct sock *sk, u32 cnt, s32 rtt_us)
 	if (rtt_us < 0)
 		return;
 
-	
-	if ((s32)(tcp_time_stamp - ca->epoch_start) < HZ)
+	/* Discard delay samples right after fast recovery */
+	if (ca->epoch_start && (s32)(tcp_time_stamp - ca->epoch_start) < HZ)
 		return;
 
 	delay = (rtt_us << 3) / USEC_PER_MSEC;
