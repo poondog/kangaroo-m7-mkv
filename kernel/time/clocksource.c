@@ -467,7 +467,7 @@ static int __init clocksource_done_booting(void)
 	mutex_unlock(&clocksource_mutex);
 	return 0;
 }
-fs_initcall(clocksource_done_booting);
+arch_initcall(clocksource_done_booting);
 
 static void clocksource_enqueue(struct clocksource *cs)
 {
