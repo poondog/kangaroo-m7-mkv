@@ -1352,8 +1352,9 @@ static void __cpuinit rcu_prepare_kthreads(int cpu)
 
 #if !defined(CONFIG_RCU_FAST_NO_HZ)
 
-int rcu_needs_cpu(int cpu)
+int rcu_needs_cpu(int cpu, unsigned long *delta_jiffies)
 {
+	*delta_jiffies = ULONG_MAX;
 	return rcu_cpu_has_callbacks(cpu);
 }
 
@@ -1382,13 +1383,25 @@ static DEFINE_PER_CPU(struct hrtimer, rcu_idle_gp_timer);
 static ktime_t rcu_idle_gp_wait;	
 static ktime_t rcu_idle_lazy_gp_wait;	
 
-int rcu_needs_cpu(int cpu)
+static bool rcu_cpu_has_nonlazy_callbacks(int cpu);
+int rcu_needs_cpu(int cpu, unsigned long *delta_jiffies)
 {
-	
-	if (!rcu_cpu_has_callbacks(cpu))
+	/* If no callbacks, RCU doesn't need the CPU. */
+	if (!rcu_cpu_has_callbacks(cpu)) {
+		*delta_jiffies = ULONG_MAX;
 		return 0;
-	
-	return per_cpu(rcu_dyntick_holdoff, cpu) == jiffies;
+	}
+	if (per_cpu(rcu_dyntick_holdoff, cpu) == jiffies) {
+		/* RCU recently tried and failed, so don't try again. */
+		*delta_jiffies = 1;
+		return 1;
+	}
+	/* Set up for the possibility that RCU will post a timer. */
+	if (rcu_cpu_has_nonlazy_callbacks(cpu))
+		*delta_jiffies = RCU_IDLE_GP_DELAY;
+	else
+		*delta_jiffies = RCU_IDLE_LAZY_GP_DELAY;
+	return 0;
 }
 
 static bool __rcu_cpu_has_nonlazy_callbacks(struct rcu_data *rdp)
