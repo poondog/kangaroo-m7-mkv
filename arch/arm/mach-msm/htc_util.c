@@ -94,7 +94,7 @@ static void htc_debug_flag_show(void)
 	if(get_tamper_sf() == 0){
 		if((get_kernel_flag()& FORCE_CHARGE) || (get_kernel_flag()& Y_CABLE))
 			cfg = 1 ;
-		pr_info("[K] CFG:0x%x", cfg);
+		pr_debug("[K] CFG:0x%x", cfg);
 	 }
 }
 
