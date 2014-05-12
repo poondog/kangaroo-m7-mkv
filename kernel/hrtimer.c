@@ -753,17 +753,17 @@ int __hrtimer_start_range_ns(struct hrtimer *timer, ktime_t tim,
 	
 	ret = remove_hrtimer(timer, base);
 
-	
-	new_base = switch_hrtimer_base(timer, base, mode & HRTIMER_MODE_PINNED);
-
 	if (mode & HRTIMER_MODE_REL) {
-		tim = ktime_add_safe(tim, new_base->get_time());
+		tim = ktime_add_safe(tim, base->get_time());
 #ifdef CONFIG_TIME_LOW_RES
 		tim = ktime_add_safe(tim, base->resolution);
 #endif
 	}
 
 	hrtimer_set_expires_range_ns(timer, tim, delta_ns);
+
+	/* Switch the timer base, if necessary: */
+	new_base = switch_hrtimer_base(timer, base, mode & HRTIMER_MODE_PINNED);
 
 	timer_stats_hrtimer_set_start_info(timer);
 
