@@ -45,21 +45,6 @@ int zlib_inflateReset(z_streamp strm)
     return Z_OK;
 }
 
-#if 0
-int zlib_inflatePrime(z_streamp strm, int bits, int value)
-{
-    struct inflate_state *state;
-
-    if (strm == NULL || strm->state == NULL) return Z_STREAM_ERROR;
-    state = (struct inflate_state *)strm->state;
-    if (bits > 16 || state->bits + bits > 32) return Z_STREAM_ERROR;
-    value &= (1L << bits) - 1;
-    state->hold += value << state->bits;
-    state->bits += bits;
-    return Z_OK;
-}
-#endif
-
 int zlib_inflateInit2(z_streamp strm, int windowBits)
 {
     struct inflate_state *state;
@@ -724,112 +709,6 @@ int zlib_inflateEnd(z_streamp strm)
         return Z_STREAM_ERROR;
     return Z_OK;
 }
-
-#if 0
-int zlib_inflateSetDictionary(z_streamp strm, const Byte *dictionary,
-        uInt dictLength)
-{
-    struct inflate_state *state;
-    unsigned long id;
-
-    
-    if (strm == NULL || strm->state == NULL) return Z_STREAM_ERROR;
-    state = (struct inflate_state *)strm->state;
-    if (state->wrap != 0 && state->mode != DICT)
-        return Z_STREAM_ERROR;
-
-    
-    if (state->mode == DICT) {
-        id = zlib_adler32(0L, NULL, 0);
-        id = zlib_adler32(id, dictionary, dictLength);
-        if (id != state->check)
-            return Z_DATA_ERROR;
-    }
-
-    
-    zlib_updatewindow(strm, strm->avail_out);
-
-    if (dictLength > state->wsize) {
-        memcpy(state->window, dictionary + dictLength - state->wsize,
-                state->wsize);
-        state->whave = state->wsize;
-    }
-    else {
-        memcpy(state->window + state->wsize - dictLength, dictionary,
-                dictLength);
-        state->whave = dictLength;
-    }
-    state->havedict = 1;
-    return Z_OK;
-}
-#endif
-
-#if 0
-static unsigned zlib_syncsearch(unsigned *have, unsigned char *buf,
-        unsigned len)
-{
-    unsigned got;
-    unsigned next;
-
-    got = *have;
-    next = 0;
-    while (next < len && got < 4) {
-        if ((int)(buf[next]) == (got < 2 ? 0 : 0xff))
-            got++;
-        else if (buf[next])
-            got = 0;
-        else
-            got = 4 - got;
-        next++;
-    }
-    *have = got;
-    return next;
-}
-#endif
-
-#if 0
-int zlib_inflateSync(z_streamp strm)
-{
-    unsigned len;               
-    unsigned long in, out;      
-    unsigned char buf[4];       
-    struct inflate_state *state;
-
-    
-    if (strm == NULL || strm->state == NULL) return Z_STREAM_ERROR;
-    state = (struct inflate_state *)strm->state;
-    if (strm->avail_in == 0 && state->bits < 8) return Z_BUF_ERROR;
-
-    
-    if (state->mode != SYNC) {
-        state->mode = SYNC;
-        state->hold <<= state->bits & 7;
-        state->bits -= state->bits & 7;
-        len = 0;
-        while (state->bits >= 8) {
-            buf[len++] = (unsigned char)(state->hold);
-            state->hold >>= 8;
-            state->bits -= 8;
-        }
-        state->have = 0;
-        zlib_syncsearch(&(state->have), buf, len);
-    }
-
-    
-    len = zlib_syncsearch(&(state->have), strm->next_in, strm->avail_in);
-    strm->avail_in -= len;
-    strm->next_in += len;
-    strm->total_in += len;
-
-    
-    if (state->have != 4) return Z_DATA_ERROR;
-    in = strm->total_in;  out = strm->total_out;
-    zlib_inflateReset(strm);
-    strm->total_in = in;  strm->total_out = out;
-    state->mode = TYPE;
-    return Z_OK;
-}
-#endif
 
 int zlib_inflateIncomp(z_stream *z)
 {

@@ -211,40 +211,12 @@ extern int zlib_inflate (z_streamp strm, int flush);
 
 extern int zlib_inflateEnd (z_streamp strm);
 
-                        
-
-
-                            
-#if 0
-extern int zlib_deflateSetDictionary (z_streamp strm,
-						     const Byte *dictionary,
-						     uInt  dictLength);
-#endif
-
-#if 0
-extern int zlib_deflateCopy (z_streamp dest, z_streamp source);
-#endif
-
-
 extern int zlib_deflateReset (z_streamp strm);
 
 static inline unsigned long deflateBound(unsigned long s)
 {
 	return s + ((s + 7) >> 3) + ((s + 63) >> 6) + 11;
 }
-
-#if 0
-extern int zlib_deflateParams (z_streamp strm, int level, int strategy);
-#endif
-
-
-extern int zlib_inflateSetDictionary (z_streamp strm,
-						     const Byte *dictionary,
-						     uInt  dictLength);
-
-#if 0
-extern int zlib_inflateSync (z_streamp strm);
-#endif
 
 extern int zlib_inflateReset (z_streamp strm);
 
