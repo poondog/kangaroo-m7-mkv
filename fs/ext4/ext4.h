@@ -1353,7 +1353,10 @@ ext4_group_first_block_no(struct super_block *sb, ext4_group_t group_no)
 		le32_to_cpu(EXT4_SB(sb)->s_es->s_first_data_block);
 }
 
-#define ERR_BAD_DX_DIR	-75000
+/*
+ * Special error return code only used by dx_probe() and its callers.
+ */
+#define ERR_BAD_DX_DIR	(-(MAX_ERRNO - 1))
 
 void ext4_get_group_no_and_offset(struct super_block *sb, ext4_fsblk_t blocknr,
 			ext4_group_t *blockgrpp, ext4_grpblk_t *offsetp);
