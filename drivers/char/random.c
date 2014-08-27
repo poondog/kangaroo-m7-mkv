@@ -565,8 +565,8 @@ static void extract_buf(struct entropy_store *r, __u8 *out)
 	spin_unlock_irqrestore(&r->lock, flags);
 
 	sha_transform(hash.w, extract, workspace);
-	memset(extract, 0, sizeof(extract));
-	memset(workspace, 0, sizeof(workspace));
+	memzero_explicit(extract, sizeof(extract));
+	memzero_explicit(workspace, sizeof(workspace));
 
 	hash.w[0] ^= hash.w[3];
 	hash.w[1] ^= hash.w[4];
@@ -580,7 +580,7 @@ static void extract_buf(struct entropy_store *r, __u8 *out)
 	}
 
 	memcpy(out, &hash, EXTRACT_SIZE);
-	memset(&hash, 0, sizeof(hash));
+	memzero_explicit(&hash, sizeof(hash));
 }
 
 static ssize_t extract_entropy(struct entropy_store *r, void *buf,
@@ -612,8 +612,8 @@ static ssize_t extract_entropy(struct entropy_store *r, void *buf,
 		ret += i;
 	}
 
-	
-	memset(tmp, 0, sizeof(tmp));
+	/* Wipe data just returned from memory */
+	memzero_explicit(tmp, sizeof(tmp));
 
 	return ret;
 }
@@ -650,8 +650,8 @@ static ssize_t extract_entropy_user(struct entropy_store *r, void __user *buf,
 		ret += i;
 	}
 
-	
-	memset(tmp, 0, sizeof(tmp));
+	/* Wipe data just returned from memory */
+	memzero_explicit(tmp, sizeof(tmp));
 
 	return ret;
 }
