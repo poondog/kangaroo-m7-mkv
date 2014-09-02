@@ -56,7 +56,6 @@
 #define SYN_CAP_ADV_GESTURE(ex0c)	((ex0c) & 0x080000)
 #define SYN_CAP_REDUCED_FILTERING(ex0c)	((ex0c) & 0x000400)
 #define SYN_CAP_IMAGE_SENSOR(ex0c)	((ex0c) & 0x000800)
-#define SYN_CAP_FORCEPAD(ex0c)		((ex0c) & 0x008000)
 
 #define SYN_MODE_ABSOLUTE(m)		((m) & (1 << 7))
 #define SYN_MODE_RATE(m)		((m) & (1 << 6))
