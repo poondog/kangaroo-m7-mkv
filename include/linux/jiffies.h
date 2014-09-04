@@ -114,16 +114,11 @@ extern unsigned long preset_lpj;
 #define SEC_JIFFIE_SC (32 - SHIFT_HZ)
 #endif
 #define NSEC_JIFFIE_SC (SEC_JIFFIE_SC + 29)
-#define USEC_JIFFIE_SC (SEC_JIFFIE_SC + 19)
 #define SEC_CONVERSION ((unsigned long)((((u64)NSEC_PER_SEC << SEC_JIFFIE_SC) +\
                                 TICK_NSEC -1) / (u64)TICK_NSEC))
 
 #define NSEC_CONVERSION ((unsigned long)((((u64)1 << NSEC_JIFFIE_SC) +\
                                         TICK_NSEC -1) / (u64)TICK_NSEC))
-#define USEC_CONVERSION  \
-                    ((unsigned long)((((u64)NSEC_PER_USEC << USEC_JIFFIE_SC) +\
-                                        TICK_NSEC -1) / (u64)TICK_NSEC))
-#define USEC_ROUND (u64)(((u64)1 << USEC_JIFFIE_SC) - 1)
 #if BITS_PER_LONG < 64
 # define MAX_SEC_IN_JIFFIES \
 	(long)((u64)((u64)MAX_JIFFY_OFFSET * TICK_NSEC) / NSEC_PER_SEC)
