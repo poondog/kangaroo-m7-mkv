@@ -964,7 +964,7 @@ static struct inode *ext4_nfs_get_inode(struct super_block *sb,
 	if (ino > le32_to_cpu(EXT4_SB(sb)->s_es->s_inodes_count))
 		return ERR_PTR(-ESTALE);
 
-	inode = ext4_iget(sb, ino);
+	inode = ext4_iget_normal(sb, ino);
 	if (IS_ERR(inode))
 		return ERR_CAST(inode);
 	if (generation && inode->i_generation != generation) {
