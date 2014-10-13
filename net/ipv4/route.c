@@ -914,7 +914,7 @@ static void __do_rt_garbage_collect(int elasticity, int min_interval)
 	int entries = dst_entries_get_fast(&ipv4_dst_ops);
 
 
-	spin_lock(&rt_gc_lock);
+	spin_lock_bh(&rt_gc_lock);
 
 	RT_CACHE_STAT_INC(gc_total);
 
@@ -1006,7 +1006,7 @@ work_done:
 	    dst_entries_get_slow(&ipv4_dst_ops) < ipv4_dst_ops.gc_thresh)
 		expire = ip_rt_gc_timeout;
 out:
-	spin_unlock(&rt_gc_lock);
+	spin_unlock_bh(&rt_gc_lock);
 }
 
 static void __rt_garbage_collect(struct work_struct *w)
