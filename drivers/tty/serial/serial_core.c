@@ -281,7 +281,7 @@ uart_get_baud_rate(struct uart_port *port, struct ktermios *termios,
 	for (try = 0; try < 2; try++) {
 		baud = tty_termios_baud_rate(termios);
 
-		if (baud == 38400)
+		if (try == 0 && baud == 38400)
 			baud = altbaud;
 
 		if (baud == 0) {
