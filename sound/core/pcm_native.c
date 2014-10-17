@@ -3476,7 +3476,8 @@ static const struct vm_operations_struct snd_pcm_vm_ops_data_fault = {
 };
 
 #ifndef ARCH_HAS_DMA_MMAP_COHERENT
-#ifdef CONFIG_ARM
+/* This should be defined / handled globally! */
+#if defined(CONFIG_ARM) || defined(CONFIG_ARM64)
 #define ARCH_HAS_DMA_MMAP_COHERENT
 #endif
 #endif
