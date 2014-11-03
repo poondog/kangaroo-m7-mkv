@@ -1176,8 +1176,10 @@ static void scsi_restart_operations(struct Scsi_Host *shost)
 	unsigned long flags;
 
 	shost_for_each_device(sdev, shost) {
-		if (scsi_device_online(sdev) && sdev->locked)
+		if (scsi_device_online(sdev) && sdev->was_reset && sdev->locked) {
 			scsi_eh_lock_door(sdev);
+			sdev->was_reset = 0;
+		}
 	}
 
 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: waking up host to restart\n",
