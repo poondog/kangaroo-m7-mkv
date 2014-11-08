@@ -1389,6 +1389,9 @@ int alps_init(struct psmouse *psmouse)
 	
 	psmouse->resync_time = 0;
 
+	/* Allow 2 invalid packets without resetting device */
+	psmouse->resetafter = psmouse->pktsize * 2;
+
 	return 0;
 
 init_fail:
