@@ -44,7 +44,7 @@ scm_version()
 
 	# Check for git and a git repo.
 	if test -d .git && head=`git rev-parse --verify --short HEAD 2>/dev/null`; then
-
+		# Don't do any checks, we know what it shows. Just yolo and out comes the short head
 		printf '%s%s' - $head
 	fi
 
