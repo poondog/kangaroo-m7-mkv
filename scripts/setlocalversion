@@ -47,33 +47,6 @@ scm_version()
 		# Don't do any checks, we know what it shows. Just yolo and out comes the short head
 		printf '%s%s' - $head
 	fi
-
-	# Check for mercurial and a mercurial repo.
-	if test -d .hg && hgid=`hg id 2>/dev/null`; then
-		# Do we have an tagged version?  If so, latesttagdistance == 1
-		if [ "`hg log -r . --template '{latesttagdistance}'`" == "1" ]; then
-			id=`hg log -r . --template '{latesttag}'`
-			printf '%s%s' -hg "$id"
-		else
-			tag=`printf '%s' "$hgid" | cut -d' ' -f2`
-			if [ -z "$tag" -o "$tag" = tip ]; then
-				id=`printf '%s' "$hgid" | sed 's/[+ ].*//'`
-				printf '%s%s' -hg "$id"
-			fi
-		fi
-
-		# All done with mercurial
-		return
-	fi
-
-	# Check for svn and a svn repo.
-	if rev=`svn info 2>/dev/null | grep '^Last Changed Rev'`; then
-		rev=`echo $rev | awk '{print $NF}'`
-		printf -- '-svn%s' "$rev"
-
-		# All done with svn
-		return
-	fi
 }
 
 collect_files()
