@@ -402,11 +402,8 @@ static void unix_release_sock(struct sock *sk, int embrion)
 
 	sock_put(sk);
 
-	
-
-
 	if (unix_tot_inflight)
-		nix_gc();		/* Garbage collect fds */
+		unix_gc();		/* Garbage collect fds */
 }
 
 static void init_peercred(struct sock *sk)
