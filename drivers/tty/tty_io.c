@@ -676,6 +676,13 @@ void start_tty(struct tty_struct *tty)
 
 EXPORT_SYMBOL(start_tty);
 
+/* We limit tty time update visibility to every 8 seconds or so. */
+static void tty_update_time(struct timespec *time)
+{
+	unsigned long sec = get_seconds() & ~7;
+	if ((long)(sec - time->tv_sec) > 0)
+		time->tv_sec = sec;
+}
 
 static ssize_t tty_read(struct file *file, char __user *buf, size_t count,
 			loff_t *ppos)
@@ -956,14 +963,6 @@ static int tty_reopen(struct tty_struct *tty)
 	mutex_unlock(&tty->ldisc_mutex);
 
 	return 0;
-}
-
-/* We limit tty time update visibility to every 8 seconds or so. */
-static void tty_update_time(struct timespec *time)
-{
-	unsigned long sec = get_seconds() & ~7;
-	if ((long)(sec - time->tv_sec) > 0)
-		time->tv_sec = sec;
 }
 
 /**
