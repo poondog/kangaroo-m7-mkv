@@ -490,22 +490,6 @@ static inline struct sk_buff *skb_get(struct sk_buff *skb)
 	return skb;
 }
 
-
-static inline int skb_unclone(struct sk_buff *skb, gfp_t pri)
-{
-	might_sleep_if(pri & __GFP_WAIT);
-
-	if (skb_cloned(skb))
-		return pskb_expand_head(skb, 0, 0, pri);
-
-	return 0;
-}
-
-static inline bool skb_has_frags(const struct sk_buff *skb)
-{
-	return skb_shinfo(skb)->nr_frags;
-}
-
 /**
  *	skb_cloned - is the buffer a clone
  *	@skb: buffer to check
@@ -518,6 +502,16 @@ static inline int skb_cloned(const struct sk_buff *skb)
 {
 	return skb->cloned &&
 	       (atomic_read(&skb_shinfo(skb)->dataref) & SKB_DATAREF_MASK) != 1;
+}
+
+static inline int skb_unclone(struct sk_buff *skb, gfp_t pri)
+{
+	might_sleep_if(pri & __GFP_WAIT);
+
+	if (skb_cloned(skb))
+		return pskb_expand_head(skb, 0, 0, pri);
+
+	return 0;
 }
 
 static inline int skb_header_cloned(const struct sk_buff *skb)
@@ -761,6 +755,11 @@ static inline int skb_pagelen(const struct sk_buff *skb)
 	for (i = (int)skb_shinfo(skb)->nr_frags - 1; i >= 0; i--)
 		len += skb_frag_size(&skb_shinfo(skb)->frags[i]);
 	return len + skb_headlen(skb);
+}
+
+static inline bool skb_has_frags(const struct sk_buff *skb)
+{
+	return skb_shinfo(skb)->nr_frags;
 }
 
 static inline void __skb_fill_page_desc(struct sk_buff *skb, int i,
