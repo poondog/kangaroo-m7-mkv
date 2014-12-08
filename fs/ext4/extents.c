@@ -3106,6 +3106,7 @@ out:
 					allocated - map->m_len);
 		allocated = map->m_len;
 	}
+	map->m_len = allocated;
 
 	if (flags & EXT4_GET_BLOCKS_DELALLOC_RESERVE) {
 		unsigned int reserved_clusters;
@@ -3235,7 +3236,6 @@ int ext4_ext_map_blocks(handle_t *handle, struct inode *inode,
 		path = NULL;
 		goto out2;
 	}
-	map->m_len = allocated;
 
 	depth = ext_depth(inode);
 
