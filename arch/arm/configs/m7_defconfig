@@ -2929,6 +2929,7 @@ CONFIG_USB_OTG=y
 # CONFIG_USB_DWC3 is not set
 # CONFIG_USB_MON is not set
 # CONFIG_USB_WUSB_CBAF is not set
+CONFIG_FORCE_FAST_CHARGE=y
 
 #
 # USB Host Controller Drivers
