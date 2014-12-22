@@ -2480,7 +2480,9 @@ static void synaptics_ts_finger_func(struct synaptics_ts_data *ts)
 	uint16_t temp_im = 0, temp_cidim = 0;
 	static int x_pos[10] = {0}, y_pos[10] = {0};
 
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
 	cputime64_t dt_trigger_time;
+#endif
 
 	memset(buf, 0x0, sizeof(buf));
 	memset(noise_index, 0x0, sizeof(noise_index));
@@ -3150,6 +3152,7 @@ static irqreturn_t synaptics_irq_thread(int irq, void *ptr)
 			}
 		}
 		if (buf & get_address_base(ts, 0x1A, INTR_SOURCE)) {
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
 			if (s2w_switch == 0) {
 				if (!ts->finger_count)
 					synaptics_ts_button_func(ts);
@@ -3157,6 +3160,10 @@ static irqreturn_t synaptics_irq_thread(int irq, void *ptr)
 //				printk("[TP] Ignore VK interrupt due to 2d points did not leave\n");
 				synaptics_ts_button_func(ts);
 			}
+#else
+			if (!ts->finger_count)
+				synaptics_ts_button_func(ts);
+#endif
 		}
 		if (buf & get_address_base(ts, 0x01, INTR_SOURCE))
 			synaptics_ts_status_func(ts);
@@ -3949,8 +3956,10 @@ static int synaptics_ts_probe(
 		kthread_run(syn_fw_update_init, (void *)ts, "SYN_FW_UPDATE");
 	}
 
-//l2w	
+//l2w
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
 	wake_lock_init(&l2w_wakelock, WAKE_LOCK_SUSPEND, "l2w_wakelock");
+#endif
 
 	kthread_run(syn_probe_init, (void *)ts, "SYN_PROBE_INIT");
 	
@@ -3979,7 +3988,9 @@ static int synaptics_ts_remove(struct i2c_client *client)
 		input_unregister_device(ts->sr_input_dev);
 	input_unregister_device(ts->input_dev);
 //l2w
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
 	wake_lock_destroy(&l2w_wakelock);
+#endif
 
 	synaptics_touch_sysfs_remove();
 
