@@ -2981,4 +2981,11 @@ config FORCE_FAST_CHARGE
 		A simple sysfs interface to force adapters that
 		are detected as USB to charge as AC.
 
+config CPU_UNDERCLOCK
+	bool "Max the freq table at 1512MHz"
+	default y
+	help
+		Simple config switch to max the acpuclock table at 
+		1512MHz. Same as FLO acpuclock table
+
 endif
