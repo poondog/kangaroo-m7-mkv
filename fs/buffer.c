@@ -1539,6 +1539,9 @@ int generic_write_end(struct file *file, struct address_space *mapping,
 	unlock_page(page);
 	page_cache_release(page);
 
+	if (old_size < pos)
+	pagecache_isize_extended(inode, old_size, pos);
+
 	if (i_size_changed)
 		mark_inode_dirty(inode);
 
@@ -2061,17 +2064,10 @@ int nobh_writepage(struct page *page, get_block_t *get_block,
 	
 	offset = i_size & (PAGE_CACHE_SIZE-1);
 	if (page->index >= end_index+1 || !offset) {
-#if 0
-		
-		if (page->mapping->a_ops->invalidatepage)
-			page->mapping->a_ops->invalidatepage(page, offset);
-#endif
 		unlock_page(page);
 		return 0; 
 	}
 
-	if (old_size < pos)
-		pagecache_isize_extended(inode, old_size, pos);
 	/*
 	 * The page straddles i_size.  It must be zeroed out on each and every
 	 * writepage invocation because it may be mmapped.  "A file is mapped
