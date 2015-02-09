@@ -156,7 +156,7 @@ static struct msm_bus_scale_pdata grp3d_bus_scale_pdata = {
 static struct resource kgsl_3d0_resources[] = {
 	{
 		.name = KGSL_3D0_REG_MEMORY,
-		.start = 0x04300000, 
+		.start = 0x04300000, /* GFX3D address */
 		.end = 0x0431ffff,
 		.flags = IORESOURCE_MEM,
 	},
@@ -211,16 +211,21 @@ static struct kgsl_device_platform_data kgsl_3d0_pdata = {
 			.io_fraction = 100,
 		},
 		{
+			.gpu_freq = 128000000,
+			.bus_freq = 1,
+			.io_fraction = 100,
+		},
+		{
 			.gpu_freq = 27000000,
 			.bus_freq = 0,
 		},
 	},
-	.init_level = 2,
-	.num_levels = 4,
+	.init_level = 1,
+	.num_levels = 5,
 	.set_grp_async = NULL,
 	.idle_timeout = HZ/10,
 	.nap_allowed = true,
-	.strtstp_sleepwake = false,
+	.strtstp_sleepwake = true,
 	.clk_map = KGSL_CLK_CORE | KGSL_CLK_IFACE | KGSL_CLK_MEM_IFACE,
 #ifdef CONFIG_MSM_BUS_SCALING
 	.bus_scale_table = &grp3d_bus_scale_pdata,
